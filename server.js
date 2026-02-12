@@ -13,6 +13,7 @@ const GOOGLE_URL = process.env.GOOGLE_URL;
 
 /**************** EXPRESS (MANDATORY FOR RENDER) ****************/
 const PORT = process.env.PORT || 3000;
+app.listen(PORT)
 
 app.get("/", (req, res) => {
   res.send("Attendance Relay Running");
