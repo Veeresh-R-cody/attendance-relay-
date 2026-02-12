@@ -50,7 +50,7 @@ client.on("message", async (topic, message) => {
       return;
     }
 
-    const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}`;
+    const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}&sheet=${encodeURIComponent(data.sheet)}`;
     const response = await fetch(url);
     const text = await response.text();
 
