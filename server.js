@@ -45,22 +45,19 @@ client.on("message", async (topic, message) => {
     const data = JSON.parse(message.toString());
     console.log("Received:", data);
 
-    if (!data.name) {
-      console.log("No name provided");
-      return;
-    }
-
     const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}&sheet=${encodeURIComponent(data.sheet)}`;
+
+    console.log("Sending to Google:", url);  // 🔥 ADD THIS
+
     const response = await fetch(url);
     const text = await response.text();
 
     console.log("Google response:", text);
 
   } catch (err) {
-    console.error("Message handling error:", err);
+    console.error("Error:", err);
   }
 });
-
 /**************** EXPRESS (MANDATORY FOR RENDER) ****************/
 const PORT = process.env.PORT || 3000;
 
