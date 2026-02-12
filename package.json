@@ -1,9 +1,0 @@
-{
-  "name": "attendance-relay",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "mqtt": "^5.3.3",
-    "node-fetch": "^3.3.2"
-  }
-}
