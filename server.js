@@ -45,7 +45,9 @@ client.on("message", async (topic, message) => {
     const data = JSON.parse(message.toString());
     console.log("Received:", data);
 
-    const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}&sheet=${encodeURIComponent(data.sheet)}`;
+    const sheetName = data.sheet || "iiot theory";
+
+const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}&sheet=${encodeURIComponent(sheetName)}`;
 
     console.log("Sending to Google:", url);  // 🔥 ADD THIS
 
