@@ -28,11 +28,8 @@ client.on("connect", () => {
   console.log("Connected to HiveMQ Cloud");
 
   client.subscribe("attendance/mark", (err) => {
-    if (err) {
-      console.log("Subscribe error:", err);
-    } else {
-      console.log("Subscribed to attendance/mark");
-    }
+    if (err) console.log("Subscribe error:", err);
+    else console.log("Subscribed to attendance/mark");
   });
 });
 
@@ -40,27 +37,71 @@ client.on("error", (err) => {
   console.error("MQTT ERROR:", err);
 });
 
-client.on("message", async (topic, message) => {
+/**************** SAFE GOOGLE SEND ****************/
+async function sendToGoogle(data) {
+
+  const sheetName = data.sheet || "iiot theory";
+
+  const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}&sheet=${encodeURIComponent(sheetName)}`;
+
+  console.log("Sending to Google:", url);
+
   try {
-    const data = JSON.parse(message.toString());
-    console.log("Received:", data);
 
-    const sheetName = data.sheet || "iiot theory";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
-const url = `${GOOGLE_URL}?name=${encodeURIComponent(data.name)}&sheet=${encodeURIComponent(sheetName)}`;
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
 
-    console.log("Sending to Google:", url);  // 🔥 ADD THIS
-
-    const response = await fetch(url);
     const text = await response.text();
 
     console.log("Google response:", text);
 
+    if (response.status === 200) {
+      return { success: true };
+    } else {
+      return { success: false, error: "Bad HTTP status" };
+    }
+
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Google fetch error:", err.message);
+    return { success: false, error: err.message };
   }
+}
+
+/**************** MESSAGE HANDLER ****************/
+client.on("message", async (topic, message) => {
+
+  let data;
+
+  try {
+    data = JSON.parse(message.toString());
+  } catch (err) {
+    console.error("Invalid JSON:", err);
+    return;
+  }
+
+  console.log("Received:", data);
+
+  if (!data.id) {
+    console.log("Missing message ID");
+    return;
+  }
+
+  const result = await sendToGoogle(data);
+
+  const ackPayload = {
+    id: data.id,
+    status: result.success ? "SUCCESS" : "FAILED"
+  };
+
+  client.publish("attendance/ack", JSON.stringify(ackPayload));
+
+  console.log("ACK sent:", ackPayload);
 });
-/**************** EXPRESS (MANDATORY FOR RENDER) ****************/
+
+/**************** EXPRESS FOR RENDER ****************/
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
